@@ -1,0 +1,129 @@
+   ##Manipulating VCF files
+           1. Describe the format of the file and the data stored
+The file is tab-delimited, it contains a header with each line starting with #, columns of data 15 in total. With the chromosomes, positions, ID, Reference and Alternate alleles, qual, filter, information on allele counts, frequency, depth, their format, and 6 columns of 6 samples. In total, the vcf file has 15 columns. The alternate alleles are different from their corresponding reference alleles. 
+
+            2. What does the header section of the file contain
+•	Command: bcftools view -h sample.vcf.gz
+The header contains the vcf file format version, reference, and alternate alleles (REF, ALT), 
+Filters used: AD- allele depth of the reference and alternate alleles, DP-read depth, GT-genotype, GQ-Genotype quality, MIN_DP-Minimum DP observed within the GVCF block, PGT-Physical phasing haplotype information, describing how the alternate alleles are phased in relation to one another, PID-Physical phasing ID information, where each unique ID within a given sample (but not across samples) connects records within a phasing group, PL-Phred-scaled likelihoods for genotypes as defined in the VCF specification, PS-Phasing set (typically the position of the first variant in the set), RGQ- Unconditional reference genotype confidence, encoded as a phred quality -10*log10 p(genotype call is wrong), SB-Per-sample component statistics which comprise the Fisher's Exact Test to detect strand bias. 
+Information on; AC- allele count, AF-allele frequency, AN-total number of alleles in called genotypes, END-stop position of the interval, FS-Phred-scaled p-value using Fisher's exact test to detect strand bias, MQ-Mapping Quality
+Contigs, sources from the GATK command line
+
+           3.	How many samples are in the file
+•	Command: bcftools query -l sample.vcf
+SRR13107018
+SRR13107019
+SRR13107020
+SRR13107021
+SRR13107022
+SRR13107023
+They are six samples in the vcf file
+OR 
+
+•	Command: bcftools view -h sample.vcf.gz | less
+From the header, there are six samples: SRR13107018, SRR13107019, SRR13107020, SRR13107021, SRR13107022, and SRR13107023.
+4. How many variants are in the file
+
+•	Command: bcftools query -f '%ALT\n' sample.vcf.gz | wc -l
+398246 variants
+The ALT column has the variant alleles, wc -l counts the number of the returned alleles
+
+        5. How would you extract the chromosome, position, QualByDepth and
+RMSMappingQuality fields? Save the output to a tab-delimited file
+•	Command: bcftools query -f '%CHROM\t%POS[\t%QD;%MQ]\n' sample.vcf > output.txt
+[\t%QD;%MQ] – prints QD and MQ separated by ; , along with the chromosome and position and direct  the output to output.txt.
+
+         6. Extract data that belongs to chromosomes 2,4 and MT
+•	Command: awk -F "\t" '$1 ~ /^(2|4|MT)$/ {print $0}' sample.vcf
+Awk uses a field separator -F that is tab-delimited and checks column  1 for expressions 2, 4, and MT and if they are found, awk prints out lines belonging to chromosomes 2, 4, and MT
+
+          7. Print out variants that do not belong to chr20:1-30000000
+•	Command: awk '$1 != "20" || ($1 == "chr20" && ($2 < 1 || $2 > 30000000)) {print $1, $2, $5}' sample.vcf | less
+the command first identifies entries not equal to chr20 or equal to chr20 but less than 1 and greater than 30000000 and then prints out the variants($5), the positions, and chromosome
+
+          8. Extract variants that belong to SRR13107019
+•	Command: bcftools query -f '%ALT\n' -s SRR13107019 sample.vcf
+Bcftools query extracts and prints out information from the column using -f option for the ALT, -s specifies the sample SRR13107019.
+
+         9. Filter out variants with a QualByDepth above 7
+•	Command: bcftools query -f '%ALT[\t%QD]\n' -i 'QD[0]>7' sample.vcf | less
+-f prints  outs the variants and the quality by depth then  -i 'QD[0]>7'  selects values greater than 7
+
+         10. How many contigs are referred to in the file? Check the header section
+•	Command: bcftools view -h sample.vcf| grep -c contig
+2212 contigs
+Bcftools view -h displays only the header of the vcf file and then grep -c counts and returns the number of contigs in the header
+
+         11. Comment on the eighth and ninth columns of the file
+The eighth column; the INFO column stores information about the variant itself. It contains information such as the variant's quality (QUAL), read depth (DP), and allele frequency (AF). The format of this column is not fixed, and different tools may add different fields to the INFO column such as 
+AC=1;AF=0.125;AN=8;BaseQRankSum=1.38;DP=10;ExcessHet=3.0103;FS=0;MLEAC=1;MLEAF=0.125;MQ=60;MQRankSum=0;QD=16.73;ReadPosRankSum=0.674;SOR=2.303.
+The ninth column; FORMAT column contains stores information about the genotype of the sample(s) at a specific variant location. It contains information such as the genotype (GT), read depth (DP), and allelic depth (AD) for each sample. The format of this column is fixed and defined in the VCF header such as GT:AD:DP:GQ:PL 
+
+        12. Extract data on the read depth of called variants for sample SRR13107018
+•	Command: bcftools query -f '%ALT[\t%SAMPLE=%DP]\n' -s SRR13107018 sample.vcf
+This command prints only the SRR13107018 sample specified by the -s option with each sample equal to its read depth along with the column of ALT alleles
+
+        13. Extract data on the allele frequency of alternate alleles. Combine this data with the
+chromosome and position of the alternate alleles
+•	Command: bcftools query -f '%ALT[\t%AF]\n' sample.vcf | less
+•	Command: bcftools query -f '%CHROM\t%POS\t%ALT[\t%AF]\n' sample.vcf | less
+
+      ##Manipulating SAM files
+            1.	Describe the format of the file and the data stored
+The sam file is a tab-delimited text file with each line containing representing a single alignment and contains several fields of information, including the read name, the reference sequence it aligns to, the position of the alignment, CIGAR string, and mapping quality. 
+
+             2. What does the header section of the file contain
+•	Command: samtools view -H sample.sam
+The header section contains; HD- general information about the alignment file with fields: GO- group ordering and SO- sort ordering of the alignments in the file, VN- the version number of the header.  SQ- information about  the reference sequence used for the alignment, SN-name of the reference sequence, LN- length of the reference sequence.
+The next part of the header contains the RG- read groups from the same sample or sequencing run, ID- identifies the read group, PL-sequencing platform used to generate read groups, PU-specific sequencing platform unit from which the reads were generated, LB- stores the name of the library from which the reads were generated,  SM- name of the sample the reads come from, CN- sequencing center where the reads were generated. Other information contained in the header is BI which is barcode indexing during multiplexing and PE for paired ended reads.
+The bottom of the header contains PG- the program that generated the alignment, PN-program name and VN- the program version, PP- the previous program used before the alignment, ID-the command line argument used to run the program that generated the alignment. 
+
+            3. How many samples are in the file
+•	Command: grep -c SM sample.sam
+249 samples are in the file
+
+           4. How many alignments are in the file
+So as to identify the alignments in the file, I called CIGAR strings since they can be used to infer the alignment of the read to the reference
+Samtools view -bS sample.sam > sample.bam, converted the sam to bam file
+Samtools sort sample.bam > sample_sorted.bam, to sort the bam 
+Samtools index sample_sorted.bam, to index the sorted bam file
+•	Command: samtools view sample_sorted.bam | cut -f6 | wc -l
+36142  alignments
+OR
+•	Command: samtools view -c sample.bam, -c prints out the count of only matching records
+36142 alignments
+
+              5. Get summary statistics for the alignments in the file
+•	Command: samtools stats sample.bam > sample.txt
+Samtools stats generate a txt file that shows a summary of the statistics of the alignment in the bam file such as the mapped reads, reads properly aligned, unmapped reads, reads mapped and paired, reads paired, and so on.
+
+             6. Count the number of fields in the file
+•	Command: grep -v "^@" sample.sam > sorted.sam
+•	Command: awk '{print NF}' sorted.sam | sort -nu
+The header is removed, then awk is used to print the number of fields. It returned 13, 17 and 18 results as some lines had column than the others
+
+             7. Print all lines in the file that have @SQ and sequence name tag beginning with NT_
+•	Command: grep "@SQ.*NT_" sample.sam
+
+             8. Print all lines in the file that have @RG and LB tag beginning with Solexa
+•	Command: grep "@RG.*LB:Solexa" sample.sam
+
+             9. Extract primarily aligned sequences and save them in another file
+•	Command: samtools view -F 4 sample.sam  > aligned_reads
+-F represents FLAG field is a bitwise flag that contains information about the alignment of a read to a reference genome.
+
+             10. Extract alignments that map to chromosomes 1 and 3. Save the output in BAM
+Format
+
+              11. How would you obtain unmapped reads from the file
+•	Command: samtools stats sample.bam > sample.txt  followed by cat sample.txt
+631 reads were unmapped.
+
+              12. How many reads are aligned to chromosome 4
+			  
+              13. Comment of the second and sixth column of the file
+The sixth column contains the CIGAR string, all the reads matched to the reference as there were no mismatches or deletions, or insertions. 
+
+             14. Extract all optional fields of the file and save them in “optional_fields.txt”
+Command: awk '{for(i=11;i<=NF;i++) print $i}' sample.sam > optional_fields.txt
+
