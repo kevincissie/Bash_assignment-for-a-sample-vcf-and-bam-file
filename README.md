@@ -1,1 +1,2 @@
-# Bash_assignment-for-a-sample-vcf-and-bam-file
+# Bash_assignment-for-a-sample-vcf-and-bam-file. The sam file and bam file can be accessed from the site below
+(https://drive.google.com/drive/folders/11UD52i99CaCSBEJFNb8Y1afo9p3hL8cL?usp=shari
