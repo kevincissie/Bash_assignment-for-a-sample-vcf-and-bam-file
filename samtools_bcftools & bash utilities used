@@ -129,7 +129,7 @@ The same file had only chromosome 21, therefore no chromosomes 1 and 3.
 	      The sam file had only chromosome 21, and no chromosome 4
 			  
               13. Comment of the second and sixth column of the file
-The sixth column contains the CIGAR string, all the read bases matched to the reference as there were no mismatches or deletions, or insertions. 
+The sixth column contains the CIGAR string, all the read bases matched to the reference as there were no mismatches or deletions, or insertions. The second column represents the reference sequence name.
 
              14. Extract all optional fields of the file and save them in “optional_fields.txt”
 Command: awk '{for(i=11;i<=NF;i++) print $i}' sample.sam > optional_fields.txt
