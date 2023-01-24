@@ -1,0 +1,1 @@
+# Bash_assignment-for-a-sample-vcf-and-bam-file
